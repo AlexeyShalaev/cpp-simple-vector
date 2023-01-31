@@ -132,18 +132,12 @@ public:
         if (new_size <= size_) {
             size_ = new_size;
         } else if (new_size <= capacity_) {
-            for (auto it = end(); it != data.Get() + capacity_; ++it) {
-                *it = std::move(Type());
-            }
-            //std::fill(end(), data.Get() + capacity_, std::move(Type()));
+            std::generate(end(), data.Get() + capacity_, []() { return Type(); });
         } else {
             //while (new_size > capacity_) capacity_ *= 2;
             capacity_ = new_size;
             ArrayPtr<Type> tmp(capacity_);
-            //std::fill(tmp.Get(), tmp.Get() + capacity_, std::move(Type()));
-            for (auto it = tmp.Get(); it != tmp.Get() + capacity_; ++it) {
-                *it = std::move(Type());
-            }
+            std::generate(tmp.Get(), tmp.Get() + capacity_, []() { return Type(); });
             std::move(begin(), end(), tmp.Get());
             data.swap(tmp);
             size_ = new_size;
