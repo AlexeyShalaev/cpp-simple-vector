@@ -25,6 +25,10 @@ public:
     // Запрещаем копирование
     ArrayPtr(const ArrayPtr &) = delete;
 
+    ArrayPtr(ArrayPtr &&other) noexcept {
+        swap(other);
+    }
+
     ~ArrayPtr() {
         delete[] raw_ptr_;
     }
@@ -32,14 +36,17 @@ public:
     // Запрещаем присваивание
     ArrayPtr &operator=(const ArrayPtr &) = delete;
 
+    ArrayPtr &operator=(ArrayPtr &&rhs) noexcept {
+        swap(rhs);
+        return *this;
+    }
+
     // Прекращает владением массивом в памяти, возвращает значение адреса массива
     // После вызова метода указатель на массив должен обнулиться
     [[nodiscard]] Type *Release()
 
     noexcept {
-        auto t = raw_ptr_;
-        raw_ptr_ = nullptr;
-        return t;
+        return std::exchange(raw_ptr_, nullptr);
     }
 
     // Возвращает ссылку на элемент массива с индексом index
