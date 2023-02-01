@@ -154,36 +154,20 @@ public:
         ++size_;
     }
 
-    Iterator MoveApart(Iterator pos, size_t distance) {
-        if (size_ < capacity_) {
-            std::move(pos, end(), pos + 1);
-        } else {
-            size_t new_capacity_ = capacity_;
-            if (capacity_ == 0) new_capacity_ = 1;
-            else new_capacity_ *= 2;
-            ArrayPtr<Type> tmp(new_capacity_);
-            std::move(begin(), pos, tmp.Get());
-            std::move(pos, end(), tmp.Get() + distance + 1);
-            data.swap(tmp);
-            capacity_ = new_capacity_;
-        }
-        return Iterator(begin() + distance);
-    }
-
     // Вставляет значение value в позицию pos.
     // Возвращает итератор на вставленное значение
     // Если перед вставкой значения вектор был заполнен полностью,
     // вместимость вектора должна увеличиться вдвое, а для вектора вместимостью 0 стать равной 1
     Iterator Insert(Iterator pos, const Type &value) {
         auto dist = std::distance(begin(), pos);
-        *MoveApart(pos, dist) = value;
+        *Expand(pos, dist) = value;
         ++size_;
         return Iterator(begin() + dist);
     }
 
     Iterator Insert(Iterator pos, Type &&value) {
         auto dist = std::distance(begin(), pos);
-        *MoveApart(pos, dist) = std::move(value);
+        *Expand(pos, dist) = std::move(value);
         ++size_;
         return Iterator(begin() + dist);
     }
@@ -259,6 +243,23 @@ public:
     // Для пустого массива может быть равен (или не равен) nullptr
     ConstIterator cend() const noexcept {
         return data.Get() + size_;
+    }
+
+private:
+    Iterator Expand(Iterator pos, size_t distance) {
+        if (size_ < capacity_) {
+            std::move(pos, end(), pos + 1);
+        } else {
+            size_t new_capacity_ = capacity_;
+            if (capacity_ == 0) new_capacity_ = 1;
+            else new_capacity_ *= 2;
+            ArrayPtr<Type> tmp(new_capacity_);
+            std::move(begin(), pos, tmp.Get());
+            std::move(pos, end(), tmp.Get() + distance + 1);
+            data.swap(tmp);
+            capacity_ = new_capacity_;
+        }
+        return Iterator(begin() + distance);
     }
 
 private:
