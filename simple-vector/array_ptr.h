@@ -10,17 +10,11 @@ public:
 
     // Создаёт в куче массив из size элементов типа Type.
     // Если size == 0, поле raw_ptr_ должно быть равно nullptr
-    explicit ArrayPtr(size_t size) {
-        if (size == 0) raw_ptr_ = nullptr;
-        else raw_ptr_ = new Type[size];
+    explicit ArrayPtr(size_t size) : raw_ptr_(size == 0 ? nullptr : new Type[size]) {
     }
 
     // Конструктор из сырого указателя, хранящего адрес массива в куче либо nullptr
-    explicit ArrayPtr(Type *raw_ptr)
-
-    noexcept {
-        raw_ptr_ = raw_ptr;
-    }
+    explicit ArrayPtr(Type *raw_ptr) : raw_ptr_(raw_ptr) {}
 
     // Запрещаем копирование
     ArrayPtr(const ArrayPtr &) = delete;
@@ -79,9 +73,7 @@ public:
     void swap(ArrayPtr &other)
 
     noexcept {
-        auto t = raw_ptr_;
-        raw_ptr_ = other.raw_ptr_;
-        other.raw_ptr_ = t;
+        std::swap(raw_ptr_, other.raw_ptr_);
     }
 
 private:
