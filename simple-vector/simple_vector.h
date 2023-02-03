@@ -26,7 +26,7 @@ public:
 
     SimpleVector() noexcept = default;
 
-    SimpleVector(const SimpleVector &other) : SimpleVector(ReserveProxyObj(other.capacity_)) {
+    SimpleVector(const SimpleVector &other) : SimpleVector(::Reserve(other.capacity_)) {
         size_ = other.size_;
         std::copy(other.begin(), other.end(), begin());
     }
@@ -38,13 +38,12 @@ public:
     // Создаёт вектор из size элементов, инициализированных значением по умолчанию
     explicit SimpleVector(size_t size) {
         Reserve(size);
-        size_ = size;
+        Resize(size);
         std::fill(begin(), end(), Type());
     }
 
     // Создаёт вектор из size элементов, инициализированных значением value
-    SimpleVector(size_t size, const Type &value) {
-        Reserve(size);
+    SimpleVector(size_t size, const Type &value) : SimpleVector(::Reserve(size)) {
         size_ = size;
         std::fill(begin(), end(), value);
     }
@@ -105,16 +104,16 @@ public:
     // Изменяет размер массива.
     // При увеличении размера новые элементы получают значение по умолчанию для типа Type
     void Resize(size_t new_size) {
-        if (new_size <= size_) {
-            size_ = new_size;
-        } else if (new_size <= capacity_) {
-            std::generate(end(), data_.Get() + new_size, [] { return Type(); });
-        } else {
-            //while (new_size > capacity_) capacity_ *= 2;
-            Reserve(new_size);
-            std::generate(end(), data_.Get() + new_size, [] { return Type(); });
-            size_ = new_size;
+        if (new_size > size_) {
+            if (new_size <= capacity_) {
+                std::generate(end(), data_.Get() + new_size, [] { return Type(); });
+            } else {
+                //while (new_size > capacity_) capacity_ *= 2;
+                Reserve(new_size);
+                std::generate(end(), data_.Get() + new_size, [] { return Type(); });
+            }
         }
+        size_ = new_size;
     }
 
     void Reserve(size_t new_capacity) {
@@ -129,12 +128,8 @@ public:
     // Добавляет элемент в конец вектора
     // При нехватке места увеличивает вдвое вместимость вектора
     void PushBack(const Type &item) {
-        if (size_ < capacity_) {
-            data_[size_] = item;
-        } else {
-            Reserve(std::max(static_cast<size_t>(1), capacity_ * 2));
-            data_[size_] = item;
-        }
+        if (size_ >= capacity_) Reserve(std::max(static_cast<size_t>(1), capacity_ * 2));
+        data_[size_] = item;
         ++size_;
     }
 
